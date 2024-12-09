@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'wan-central-lab-mobile'
+rootProject.name = 'Wan Central Lab'
 
 dependencyResolutionManagement {
   versionCatalogs {

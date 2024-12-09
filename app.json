@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "wan-central-lab-mobile",
-    "slug": "wan-central-lab-mobile",
+    "name": "Wan Central Lab",
+    "slug": "Wan Central Lab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,10 +12,6 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.erwanph.wancentrallabmobile"
     },
     "web": {
