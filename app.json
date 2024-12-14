@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Wan Central Lab",
-    "slug": "Wan Central Lab",
+    "slug": "wan-central-lab-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -24,6 +24,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "7f9d0e0c-55a3-4545-a029-734a09b3c5d5"
+      }
     }
   }
 }
