@@ -16,9 +16,11 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-async-storage/root": "github:react-native-async-storage/async-storage",
     "@react-navigation/bottom-tabs": "^7.0.0",
-    "@react-navigation/native": "^7.0.0",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/stack": "^7.1.1",
     "axios": "^1.7.9",
     "expo": "~52.0.17",
     "expo-blur": "~14.0.1",
@@ -44,8 +46,7 @@
     "react-native-screens": "~4.1.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "undefined": "react-native-async-storage/async-storage",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "undefined": "react-native-async-storage/async-storage"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

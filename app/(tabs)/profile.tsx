@@ -1,73 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { useUser } from '@/hooks/UserContext';
 
-export default function ProfileScreen() {
+const ProfilePage: React.FC = () => {
   const { user, setUser } = useUser();
-  const [newName, setNewName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [score, setScore] = useState(user?.score?.toString() || '0');
-
+  const [newName, setNewName] = useState('');
+  const [email, setEmail] = useState('');
+  const [score, setScore] = useState('');
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    const token = await AsyncStorage.getItem('sessionToken');
-    if (!token) {
-      setErrorMessage('You are not logged in.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch('https://wan-central-lab.vercel.app/api/proxy?api=getProfile', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile data');
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('sessionToken');
+      if (!token) {
+        Alert.alert('Error', 'You are not logged in.');
+        return;
       }
 
-      const responseBody = await response.json();
-      const userData = {
-        name: responseBody.data.name,
-        email: responseBody.data.email,
-        score: parseInt(responseBody.data.score, 10)
-      };
-      
-      setNewName(userData.name);
-      setScore(userData.score.toString());
-      setEmail(userData.email);
-      setUser(userData);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setErrorMessage('Failed to load profile data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+        const response = await fetch('http://127.0.0.1:6565/api/v1/profile/', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch profile data');
+
+        const responseBody = await response.json();
+        setNewName(responseBody.data.name);
+        setEmail(responseBody.data.email);
+        setScore(responseBody.data.score.toString());
+
+        // Include 'score' in setUser
+        setUser({
+          name: responseBody.data.name,
+          email: responseBody.data.email,
+          score: responseBody.data.score,
+        });
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        Alert.alert('Error', 'Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [setUser]);
 
   const handleUpdateProfile = async () => {
-    const token = await AsyncStorage.getItem('sessionToken');
+    const token = localStorage.getItem('sessionToken');
     if (!token) return;
 
     try {
       setLoading(true);
-      setSuccessMessage('');
-      setErrorMessage('');
-      
       if (user?.name === newName) {
-        setErrorMessage('No field change');
+        Alert.alert('Error', 'No changes made.');
         return;
       }
 
@@ -83,19 +81,19 @@ export default function ProfileScreen() {
       if (!response.ok) throw new Error('Failed to update profile');
 
       const responseBody = await response.json();
-      const updatedUser = {
+
+      // Include 'score' in setUser
+      setUser({
         name: responseBody.data.name,
         email: responseBody.data.email,
-        score: parseInt(responseBody.data.score, 10)
-      };
-      
-      setUser(updatedUser);
-      setScore(updatedUser.score.toString());
-      setSuccessMessage('Profile updated successfully');
+        score: responseBody.data.score,
+      });
+
+      Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      setErrorMessage('Failed to update profile.');
+      Alert.alert('Error', 'Failed to update profile.');
     } finally {
       setLoading(false);
     }
@@ -103,7 +101,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.center}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -113,21 +111,19 @@ export default function ProfileScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Profile</Text>
       <View style={styles.card}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        <View style={styles.inputContainer}>
+        {/* Name */}
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Name</Text>
           <TextInput
             value={newName}
             onChangeText={setNewName}
             editable={isEditing}
-            style={[
-              styles.input,
-              !isEditing && styles.disabledInput
-            ]}
+            style={[styles.input, !isEditing && styles.disabledInput]}
           />
         </View>
 
-        <View style={styles.inputContainer}>
+        {/* Email */}
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Email</Text>
           <TextInput
             value={email}
@@ -136,7 +132,8 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <View style={styles.inputContainer}>
+        {/* Score */}
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Latest Score</Text>
           <TextInput
             value={score}
@@ -145,127 +142,107 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* Buttons */}
         {!isEditing ? (
-          <TouchableOpacity
-            onPress={() => setIsEditing(true)}
-            style={styles.button}
-          >
+          <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
             <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
         ) : (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              onPress={handleUpdateProfile}
-              style={[styles.button, styles.submitButton]}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Submitting...' : 'Submit'}
-              </Text>
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity onPress={handleUpdateProfile} style={styles.submitButton}>
+              <Text style={styles.buttonText}>Submit</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               onPress={() => {
                 setIsEditing(false);
-                setNewName(user?.name || '');
+                setNewName(user?.name ?? '');
               }}
-              style={[styles.button, styles.cancelButton]}
+              style={styles.cancelButton}
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         )}
-
-        {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 24,
+    padding: 20,
     backgroundColor: '#f3f4f6',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 5,
     elevation: 3,
   },
-  inputContainer: {
-    marginBottom: 16,
+  inputGroup: {
+    marginBottom: 15,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    color: '#374151',
+    color: '#333',
+    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 4,
-    padding: 8,
-    fontSize: 14,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: '#fff',
   },
   disabledInput: {
-    backgroundColor: '#f3f4f6',
-    color: '#6b7280',
+    backgroundColor: '#f2f2f2',
+    color: '#999',
   },
-  button: {
-    backgroundColor: '#2563eb',
-    padding: 12,
-    borderRadius: 4,
+  editButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 5,
     alignItems: 'center',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   submitButton: {
+    backgroundColor: '#28a745',
+    padding: 10,
+    borderRadius: 5,
     flex: 1,
-    marginRight: 8,
-    backgroundColor: '#10b981',
+    alignItems: 'center',
   },
   cancelButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
     flex: 1,
-    marginLeft: 8,
-    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    marginLeft: 10,
   },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-    marginBottom: 16,
+  buttonGroup: {
+    flexDirection: 'row',
+    marginTop: 20,
   },
-  successText: {
-    color: '#10b981',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-    marginTop: 16,
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
+
+export default ProfilePage;
