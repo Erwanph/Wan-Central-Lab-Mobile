@@ -13,21 +13,28 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onRegisterPress }
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:6565/api/v1/auth/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // const response = await fetch('http://127.0.0.1:6565/api/v1/auth/login/', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ email, password }),
+      // });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   throw new Error(errorData.message || 'Login failed');
+      // }
+      
+      // const data = await response.json();
+      // onLoginSuccess();
+
+      if (email === 'erwan@gmail.com' && password === 'erwan') {
+        onLoginSuccess(); // Jika login berhasil
+      } else {
+        throw new Error('Invalid email or password');
       }
-
-      const data = await response.json();
-      onLoginSuccess();
+      
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
