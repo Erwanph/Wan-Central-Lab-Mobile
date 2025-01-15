@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import axios from 'axios';
 
 interface RegisterPageProps {
   onRegistrationSuccess: () => void;
@@ -14,24 +15,27 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistrationSuccess, onLo
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:6565/api/v1/auth/register/', {
+      const response = await axios({
         method: 'POST',
+        url: 'http://localhost:8080/auth/register',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        data: {
+          name,
+          email,
+          password
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
-      }
-
-      const data = await response.json();
+      // If the request is successful, axios automatically throws for non-2xx status codes
       onRegistrationSuccess();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        // Handle Axios specific errors
+        const errorMessage = err.response?.data?.message || err.message;
+        setError(errorMessage);
       } else {
         setError('An unexpected error occurred');
       }
@@ -41,6 +45,13 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistrationSuccess, onLo
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/adaptive-icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.title}>Sign Up</Text>
         <TextInput
           style={styles.input}
@@ -128,6 +139,14 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
     fontSize: 24,

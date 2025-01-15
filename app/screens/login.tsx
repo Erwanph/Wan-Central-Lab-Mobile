@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -11,42 +13,38 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onRegisterPress }
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>('');
 
+
   const handleSubmit = async () => {
     try {
-      // const response = await fetch('http://127.0.0.1:6565/api/v1/auth/login/', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ email, password }),
-      // });
-
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || 'Login failed');
-      // }
-      
-      // const data = await response.json();
-      // onLoginSuccess();
-
-      if (email === 'erwan@gmail.com' && password === 'erwan') {
-        onLoginSuccess(); // Jika login berhasil
-      } else {
-        throw new Error('Invalid email or password');
-      }
-      
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
+      const response = await axios.post('http://localhost:8080/auth/login', {
+        email,
+        password,
+      });
+  
+      // Save session token to AsyncStorage
+      const token = response.data.token;
+      await AsyncStorage.setItem('sessionToken', token);
+  
+      // Call onLoginSuccess callback
+      onLoginSuccess();
+    } catch (err) {
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.message || err.message
+        : 'An unexpected error occurred';
+      setError(errorMessage);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.title}>Login</Text>
         <TextInput
           style={styles.input}
@@ -126,6 +124,14 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
     fontSize: 24,

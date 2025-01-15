@@ -6,22 +6,23 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  ScrollView,
   Alert,
+  ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '@/hooks/UserContext';
 
 const ProfilePage: React.FC = () => {
   const { user, setUser } = useUser();
-  const [newName, setNewName] = useState('');
-  const [email, setEmail] = useState('');
-  const [score, setScore] = useState('');
+  const [newName, setNewName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [score, setScore] = useState(user?.score?.toString() || '0');
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('sessionToken');
+      const token = await AsyncStorage.getItem('sessionToken');
       if (!token) {
         Alert.alert('Error', 'You are not logged in.');
         return;
@@ -29,7 +30,7 @@ const ProfilePage: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:6565/api/v1/profile/', {
+        const response = await fetch('http://localhost:8080/users/:id', {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -37,15 +38,13 @@ const ProfilePage: React.FC = () => {
         if (!response.ok) throw new Error('Failed to fetch profile data');
 
         const responseBody = await response.json();
-        setNewName(responseBody.data.name);
-        setEmail(responseBody.data.email);
-        setScore(responseBody.data.score.toString());
-
-        // Include 'score' in setUser
+        setNewName(responseBody.name);
+        setEmail(responseBody.email);
+        setScore(responseBody.score.toString());
         setUser({
-          name: responseBody.data.name,
-          email: responseBody.data.email,
-          score: responseBody.data.score,
+          name: responseBody.name,
+          email: responseBody.email,
+          score: responseBody.score,
         });
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -59,7 +58,7 @@ const ProfilePage: React.FC = () => {
   }, [setUser]);
 
   const handleUpdateProfile = async () => {
-    const token = localStorage.getItem('sessionToken');
+    const token = await AsyncStorage.getItem('sessionToken');
     if (!token) return;
 
     try {
@@ -69,26 +68,23 @@ const ProfilePage: React.FC = () => {
         return;
       }
 
-      const response = await fetch('https://wan-central-lab.vercel.app/api/proxy?api=updateProfile', {
+      const response = await fetch('http://localhost:8080/users/:id', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ new_name: newName }),
+        body: JSON.stringify({ name: newName }),
       });
 
       if (!response.ok) throw new Error('Failed to update profile');
 
       const responseBody = await response.json();
-
-      // Include 'score' in setUser
       setUser({
-        name: responseBody.data.name,
-        email: responseBody.data.email,
-        score: responseBody.data.score,
+        name: responseBody.name,
+        email: responseBody.email,
+        score: responseBody.score,
       });
-
       Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
@@ -99,19 +95,16 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+  const handleLogout = async () => {
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Profile</Text>
       <View style={styles.card}>
-        {/* Name */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Name</Text>
           <TextInput
@@ -121,47 +114,26 @@ const ProfilePage: React.FC = () => {
             style={[styles.input, !isEditing && styles.disabledInput]}
           />
         </View>
-
-        {/* Email */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            editable={false}
-            style={[styles.input, styles.disabledInput]}
-          />
+          <TextInput value={email} editable={false} style={[styles.input, styles.disabledInput]} />
         </View>
-
-        {/* Score */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Latest Score</Text>
-          <TextInput
-            value={score}
-            editable={false}
-            style={[styles.input, styles.disabledInput]}
-          />
+          <TextInput value={score} editable={false} style={[styles.input, styles.disabledInput]} />
         </View>
-
-        {/* Buttons */}
-        {!isEditing ? (
+        <View style={styles.buttonGroup}>
           <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
             <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity onPress={handleUpdateProfile} style={styles.submitButton}>
-              <Text style={styles.buttonText}>Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setIsEditing(false);
-                setNewName(user?.name ?? '');
-              }}
-              style={styles.cancelButton}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.buttonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+        {isEditing && (
+          <TouchableOpacity onPress={handleUpdateProfile} style={styles.submitButton}>
+            <Text style={styles.buttonText}>Submit</Text>
+          </TouchableOpacity>
         )}
       </View>
     </ScrollView>
@@ -174,74 +146,64 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f3f4f6',
   },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
   },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    fontWeight: '600',
+  },
   card: {
     backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 5,
-    elevation: 3,
   },
   inputGroup: {
     marginBottom: 15,
   },
-  label: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 5,
-  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
     padding: 10,
-    backgroundColor: '#fff',
+    borderRadius: 5,
   },
   disabledInput: {
-    backgroundColor: '#f2f2f2',
-    color: '#999',
+    backgroundColor: '#e9ecef',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   editButton: {
     backgroundColor: '#007BFF',
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
   },
   submitButton: {
     backgroundColor: '#28a745',
     padding: 10,
     borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
+    marginTop: 10,
   },
-  cancelButton: {
+  logoutButton: {
     backgroundColor: '#dc3545',
     padding: 10,
     borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    marginTop: 20,
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
+    textAlign: 'center',
     fontWeight: 'bold',
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 
