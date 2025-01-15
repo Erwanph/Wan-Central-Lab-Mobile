@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (userData: { user: any; sessionToken: string }) => void;
   onRegisterPress: () => void;
 }
 
@@ -13,20 +13,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onRegisterPress }
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>('');
 
-
   const handleSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:8080/auth/login', {
+      const response = await axios.post('https://wan-central-lab-mobile-back-end.vercel.app/auth/login', {
         email,
         password,
       });
-  
-      // Save session token to AsyncStorage
-      const token = response.data.token;
-      await AsyncStorage.setItem('sessionToken', token);
-  
-      // Call onLoginSuccess callback
-      onLoginSuccess();
+
+      const { sessionToken, user, userId } = response.data;
+
+      if (user && sessionToken && userId) {
+        // Extract values from the nested 'user' object
+        const { name, email } = user;
+      
+        // Save sessionToken, name, email, userId to AsyncStorage
+        await AsyncStorage.setItem('sessionToken', sessionToken);
+        await AsyncStorage.setItem('userName', name); // use `name` directly from the `user` object
+        await AsyncStorage.setItem('userEmail', email); // use `email` from the `user` object
+        await AsyncStorage.setItem('userId', userId); // Save userId here
+      
+        // Call onLoginSuccess callback with user data
+        onLoginSuccess({ user, sessionToken });
+
+      } else {
+        setError('Invalid response from server');
+      }
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.message || err.message
@@ -188,3 +199,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginPage;
+

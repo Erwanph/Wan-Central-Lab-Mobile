@@ -17,7 +17,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistrationSuccess, onLo
     try {
       const response = await axios({
         method: 'POST',
-        url: 'http://localhost:8080/auth/register',
+        url: 'https://wan-central-lab-mobile-back-end.vercel.app/auth/register',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -47,7 +47,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistrationSuccess, onLo
       <View style={styles.card}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('@/assets/images/adaptive-icon.png')}
+            source={require('@/assets/images/icon.png')}
             style={styles.logo}
             resizeMode="contain"
           />

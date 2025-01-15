@@ -1,11 +1,12 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define the User type
+// Define the User type with userId
 export type User = {
   name: string;
   email: string;
   score: number;
+  userId: string;  // Add userId to the type
 } | null;
 
 // Define the context type
@@ -30,8 +31,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       if (newUser) {
         await AsyncStorage.setItem('user', JSON.stringify(newUser));
+        await AsyncStorage.setItem('userId', newUser.userId); // Store userId separately
       } else {
         await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('userId'); // Remove userId as well
       }
       setUser(newUser);
     } catch (error) {
@@ -42,11 +45,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const clearUser = async () => {
     try {
       await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('userId');
       setUser(null);
     } catch (error) {
       console.error('Error clearing user:', error);
     }
   };
+
+  // Retrieve user data from AsyncStorage on initial load
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        const storedUserId = await AsyncStorage.getItem('userId');
+
+        if (storedUser && storedUserId) {
+          const parsedUser = JSON.parse(storedUser);
+          // Handle fallback for userId in case it's undefined or null
+          parsedUser.userId = storedUserId || '';
+
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+
+    loadUser();
+  }, []);
 
   return (
     <UserContext.Provider value={{ user, setUser: handleSetUser, clearUser }}>
@@ -63,4 +89,3 @@ export function useUser() {
   }
   return context;
 }
-

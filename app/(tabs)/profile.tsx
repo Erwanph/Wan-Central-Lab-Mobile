@@ -5,12 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '@/hooks/UserContext';
+import { useRouter } from 'expo-router';
 
 const ProfilePage: React.FC = () => {
   const { user, setUser } = useUser();
@@ -21,72 +21,69 @@ const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const token = await AsyncStorage.getItem('sessionToken');
-      if (!token) {
-        Alert.alert('Error', 'You are not logged in.');
-        return;
-      }
-
+    const fetchProfileFromStorage = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:8080/users/:id', {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch profile data');
-
-        const responseBody = await response.json();
-        setNewName(responseBody.name);
-        setEmail(responseBody.email);
-        setScore(responseBody.score.toString());
-        setUser({
-          name: responseBody.name,
-          email: responseBody.email,
-          score: responseBody.score,
-        });
+        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserEmail = await AsyncStorage.getItem('userEmail');
+        const storedUserId = await AsyncStorage.getItem('userId');
+        const storedSessionToken = await AsyncStorage.getItem('sessionToken');
+  
+        if (storedUserName && storedUserEmail && storedUserId && storedSessionToken) {
+          setNewName(storedUserName);
+          setEmail(storedUserEmail);
+          setScore('0'); // Default score, update as per your app's logic
+          setUser({
+            name: storedUserName,
+            email: storedUserEmail,
+            score: 0, // or fetch score dynamically
+            userId: storedUserId,
+          });
+        } else {
+          Alert.alert('Error', 'No user data found.');
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching user profile from AsyncStorage:', error);
         Alert.alert('Error', 'Failed to load profile data.');
-      } finally {
-        setLoading(false);
       }
     };
-
-    fetchProfile();
+  
+    fetchProfileFromStorage();
   }, [setUser]);
 
   const handleUpdateProfile = async () => {
     const token = await AsyncStorage.getItem('sessionToken');
     if (!token) return;
-
+  
     try {
       setLoading(true);
+      
+      // If no changes are made to the name, show an alert
       if (user?.name === newName) {
         Alert.alert('Error', 'No changes made.');
         return;
       }
-
-      const response = await fetch('http://localhost:8080/users/:id', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newName }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      const responseBody = await response.json();
-      setUser({
-        name: responseBody.name,
-        email: responseBody.email,
-        score: responseBody.score,
-      });
+  
+      // Ensure user fields are always valid by providing defaults if necessary
+      const updatedUser = {
+        name: newName,
+        email: user?.email || '',  // Provide default empty string for email
+        score: user?.score ?? 0,    // Use 0 as default for score if it's undefined
+        userId: user?.userId || '', // Ensure userId is always a string
+      };
+  
+      // Update profile in AsyncStorage
+      await AsyncStorage.setItem('userName', updatedUser.name);
+      await AsyncStorage.setItem('userEmail', updatedUser.email);  // Update email in AsyncStorage
+      await AsyncStorage.setItem('userScore', updatedUser.score.toString());  // Save score as a string
+      await AsyncStorage.setItem('userId', updatedUser.userId);  // Update userId in AsyncStorage
+  
+      // Update user context with the new values
+      setUser(updatedUser);
+  
+      // Show success message
       Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);
+  
     } catch (error) {
       console.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile.');
@@ -95,10 +92,27 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    localStorage.removeItem('sessionToken');
-    localStorage.removeItem('user');
-    window.location.href = '/';
+const handleLogout = async () => {
+  const router = useRouter(); // Get the navigation object
+
+  try {
+    // Remove all the user-related data from AsyncStorage
+    await AsyncStorage.removeItem('sessionToken');
+    await AsyncStorage.removeItem('userName');
+    await AsyncStorage.removeItem('userEmail');
+    await AsyncStorage.removeItem('userId');
+    
+    // Reset user context
+    setUser(null);
+    
+    // Navigate to the Login screen
+    router.replace("/screens/login") // Make sure 'Login' is the name of your login screen in the navigation stack
+
+    Alert.alert('Logged out', 'You have been logged out.');
+  } catch (error) {
+    console.error('Error logging out:', error);
+    Alert.alert('Error', 'Failed to logout.');
+  }
 };
 
   return (
@@ -145,11 +159,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
     backgroundColor: '#f3f4f6',
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   title: {
     fontSize: 24,

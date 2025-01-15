@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, View, ScrollView } from 'react-native';
 import OhmsLawDesc from '@/components/OhmsLawDesc';
 import OhmsLawSimulator from '@/components/OhmsLawSimulator';
 import OhmsLawQuiz from '@/components/OhmsLawQuiz';
@@ -27,3 +27,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
