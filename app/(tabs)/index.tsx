@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.4,
+    opacity: 0.8,
   },
   heroGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -207,29 +207,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    textShadowColor: 'rgba(0, 0, 0, 1)', // Warna putih untuk efek glow
+    textShadowOffset: { width: 0, height: 0 }, // Offset nol agar glow menyebar merata
+    textShadowRadius: 30, // Radius yang lebih besar untuk efek glow
     includeFontPadding: false,
-    lineHeight: Platform.select({ ios: 38, android: 34, default: 38 }), // Add proper line height
-    paddingTop: Platform.OS === 'android' ? 4 : 0, // Additional padding for Android
+    lineHeight: Platform.select({ ios: 38, android: 34, default: 38 }), // Tambahkan tinggi baris yang sesuai
+    paddingTop: Platform.OS === 'android' ? 4 : 0, // Padding tambahan untuk Android
   },
   heroSubtitle: {
     fontSize: Platform.select({ ios: 20, android: 16, default: 20 }),
     textAlign: 'center',
     marginBottom: 8,
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    textShadowColor: 'rgba(0, 0, 0, 1)', // Warna putih untuk efek glow
+    textShadowOffset: { width: 0, height: 0 }, // Offset nol agar glow menyebar merata
+    textShadowRadius: 30, // Radius yang lebih besar untuk efek glow
   },
-    heroDescription: {
+  heroDescription: {
     fontSize: Platform.select({ ios: 16, android: 14, default: 16 }),
     textAlign: 'center',
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    textShadowColor: 'rgba(0, 0, 0, 1)', // Warna putih untuk efek glow
+    textShadowOffset: { width: 0, height: 0 }, // Offset nol agar glow menyebar merata
+    textShadowRadius: 30, // Radius yang lebih besar untuk efek glow
     paddingHorizontal: 20,
   },
   contentSection: {

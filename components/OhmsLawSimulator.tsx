@@ -268,8 +268,8 @@ const OhmsLawSimulator = () => {
                       labels: dataPoints.map((dp) => dp.voltage.toString()),
                       datasets: [{ data: dataPoints.map((dp) => dp.current) }],
                     }}
-                    width={Dimensions.get('window').width - 80}
-                    height={220}
+                    width={Dimensions.get('window').width - 135}
+                    height={250}
                     chartConfig={{
                       backgroundColor: '#ffffff',
                       backgroundGradientFrom: '#ffffff',
@@ -463,13 +463,13 @@ const styles = StyleSheet.create({
     maxHeight: 165,
   },
   chartWrapper: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 8, // Sesuaikan padding
     marginTop: 20,
   },
   chartContainer: {
     backgroundColor: 'white',
     borderRadius: 16,
-    padding: 20,
+    padding: 20, // Kurangi padding agar tidak terlalu besar
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -478,12 +478,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    overflow: 'hidden', // Tambahkan untuk memastikan konten tidak keluar
   },
   chart: {
-    marginVertical: 2,
+    marginVertical: 8, // Sesuaikan margin agar grafik berada di tengah
     borderRadius: 16,
+    overflow: 'hidden', // Mencegah elemen keluar dari area
   },
-  tooltipText: {
+    tooltipText: {
     color: 'white',
     fontSize: 12,
     textAlign: 'center',
