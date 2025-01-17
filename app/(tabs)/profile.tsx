@@ -184,16 +184,9 @@ const ProfilePage: React.FC = () => {
           console.error('Logout API error:', error);
         }
       }
-      await AsyncStorage.multiRemove([
-        'sessionToken',
-        'userName',
-        'userEmail',
-        'userId',
-        'score',
-      ]);
-
+      await AsyncStorage.clear();
       setUser(null);
-      router.replace('/');
+      router.replace('/screens/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -225,7 +218,7 @@ const ProfilePage: React.FC = () => {
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Latest Score</Text>
+            <Text style={styles.label}>Score</Text>
             <TextInput 
               value={score.toString()} 
               editable={false} 

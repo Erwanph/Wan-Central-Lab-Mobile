@@ -15,74 +15,81 @@ const OhmsLawQuiz = () => {
 
   const calculateQuizScore = async () => {
     if (!quiz1 || !quiz2) {
-      alert('Incomplete: Please answer all questions');
+      Alert.alert('Incomplete', 'Please answer all questions.');
       return;
     }
-    
+  
     let scoreWorked = 0;
     if (quiz1 === 'V=IR') scoreWorked += 50;
     if (quiz2 === 'Decreases') scoreWorked += 50;
-    
+  
     try {
-      // First update the backend
+      // Update backend terlebih dahulu
       await axios.patch(`https://wan-central-lab-mobile-back-end.vercel.app/users/${userId}/score`, {
-        score: scoreWorked
+        score: scoreWorked,
       });
   
-      // Then update both AsyncStorage and context in a coordinated way
-      await Promise.all([
-        AsyncStorage.setItem('score', scoreWorked.toString()),
-        updateScore(scoreWorked)
-      ]);
+      // Update AsyncStorage
+      await AsyncStorage.setItem('score', scoreWorked.toString());
   
-      // Finally update local state
+      // Update context dan state
+      updateScore(scoreWorked);
       setCurrentScore(scoreWorked);
       setQuizSubmitted(true);
   
-      console.log('Score updated successfully');
+      Alert.alert('Success', 'Your score has been submitted!');
     } catch (error) {
-      console.error('Error incrementing score:', error);
-      Alert.alert('Error', 'Failed to update the score.');
+      console.error('Error submitting quiz score:', error);
+      Alert.alert('Error', 'Failed to submit your score. Please try again later.');
     }
   };
   
   const handleReset = async () => {
     try {
-      // Reset the score to 0 using the updateScore API
       await axios.patch(`https://wan-central-lab-mobile-back-end.vercel.app/users/${userId}/score`, {
-        score: 0
+        score: 0,
       });
-
-      // Reset the local state
+  
+      await AsyncStorage.removeItem('score');
+  
       setCurrentScore(0);
       setQuizSubmitted(false);
       setQuiz1('');
       setQuiz2('');
-      await AsyncStorage.removeItem('score');
+  
+      Alert.alert('Reset', 'Quiz has been reset.');
     } catch (error) {
-      console.error('Error resetting score:', error);
-      Alert.alert('Error', 'Failed to reset the score.');
+      console.error('Error resetting quiz:', error);
+      Alert.alert('Error', 'Failed to reset quiz. Please try again.');
     }
   };
 
   useEffect(() => {
-    const fetchUserId = async () => {
-      const storedUserId = await AsyncStorage.getItem('userId');
-      if (storedUserId !== null) {
-        setUserId(storedUserId);  // Only set state if userId is not null
-      } else {
-        console.log('User ID not found in AsyncStorage');
+    const fetchUserIdAndScore = async () => {
+      try {
+        // Ambil userId dari AsyncStorage
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId !== null) {
+          setUserId(storedUserId); // Set userId hanya jika ada
+        } else {
+          console.log('User ID not found in AsyncStorage');
+        }
+  
+        // Ambil score dari AsyncStorage
+        const storedScore = await AsyncStorage.getItem('score');
+        if (storedScore && Number(storedScore) > 0) {
+          setCurrentScore(Number(storedScore));
+          setQuizSubmitted(true); // Quiz sudah selesai
+        } else {
+          setCurrentScore(0);
+          setQuizSubmitted(false); // Quiz belum dikerjakan
+        }
+      } catch (error) {
+        console.error('Error fetching data from AsyncStorage:', error);
       }
     };
-    // Load previous quiz score if available
-    AsyncStorage.getItem('score').then((score) => {
-      if (score) {
-        setCurrentScore(Number(score));
-        setQuizSubmitted(true);
-      }
-    });
-
-    fetchUserId();
+  
+    fetchUserIdAndScore();
   }, []);
 
   return (

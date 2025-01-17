@@ -230,7 +230,7 @@ const OhmsLawSimulator = () => {
 
         {dataPoints.length > 0 && (
           <>
-            <View style={styles.tableContainer}>
+            <ScrollView style={styles.tableContainer}>
               <View style={styles.tableHeader}>
                 <Text style={styles.tableHeaderText}>RL (Ω)</Text>
                 <Text style={styles.tableHeaderText}>RR (Ω)</Text>
@@ -249,7 +249,7 @@ const OhmsLawSimulator = () => {
                   </View>
                 ))}
               </View>
-            </View>
+            </ScrollView>
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     color: '#34495e',
   },
   tableContent: {
-    maxHeight: 200,
+    maxHeight: 165,
   },
   chartWrapper: {
     paddingHorizontal: 20,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   chart: {
-    marginVertical: 8,
+    marginVertical: 2,
     borderRadius: 16,
   },
   tooltipText: {
